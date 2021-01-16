@@ -28,11 +28,51 @@ import socketserver
 
 
 class MyWebServer(socketserver.BaseRequestHandler):
-    
+    def get_file(self):
+        data_split = self.data.decode("utf-8").split(" ")
+        method, req_file = data_split[0], data_split[1]
+        print(method, req_file)
+
+        if method != "GET":
+            self.send_bytes("HTTP/1.1 405 Method Not Allowed\n")
+
+        if req_file == "/":
+            return "/index.html"
+
+        return req_file
+
+    def send_bytes(self, string):
+        self.request.sendall(bytearray(string, "utf-8"))
+
+    def content_type(self, req_file):
+        content_type = ""
+        if req_file.endswith("html"):
+            content_type = "text/html"
+        elif req_file.endswith("css"):
+            content_type = "text/css"
+        else:
+            raise FileNotFoundError("File not found.")
+        return content_type
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+
+        req_file = self.get_file()
+
+        try:
+            with open("www" + req_file, "r") as index_file:
+                index = index_file.read()
+                self.send_bytes("HTTP/1.1 200 OK\n")
+                self.send_bytes("Content-Type: " + self.content_type(req_file) + "\n")
+
+                # This newline marks the end of the HTTP response headers.
+                self.send_bytes("\n")
+                self.send_bytes(index)
+        except FileNotFoundError as e:
+            print("File not found")
+            self.send_bytes("HTTP/1.1 404 Not Found\n")
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
