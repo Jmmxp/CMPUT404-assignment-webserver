@@ -63,6 +63,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
         try:
             with open("www" + req_file, "r") as index_file:
                 index = index_file.read()
+
+                # Code from StackOverflow user falsetru https://stackoverflow.com/users/2225682/falsetru 
+                # https://stackoverflow.com/questions/21153262/sending-html-through-python-socket-server
                 self.send_bytes("HTTP/1.1 200 OK\n")
                 self.send_bytes("Content-Type: " + self.content_type(req_file) + "\n")
 
