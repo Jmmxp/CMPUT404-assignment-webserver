@@ -26,6 +26,8 @@ import socketserver
 
 # try: curl -v -X GET http://127.0.0.1:8080/
 
+class MethodNotAllowedError(Exception):
+    pass
 
 class MyWebServer(socketserver.BaseRequestHandler):
     def get_file(self):
@@ -34,15 +36,27 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print(method, req_file)
 
         if method != "GET":
-            self.send_bytes("HTTP/1.1 405 Method Not Allowed\n")
+            raise MethodNotAllowedError("HTTP method " + method + " is not allowed.")
 
-        if req_file == "/":
-            return "/index.html"
+        if req_file.endswith("/"):
+            return req_file + "index.html"
 
         return req_file
 
-    def send_bytes(self, string):
-        self.request.sendall(bytearray(string, "utf-8"))
+    # Code by StackOverflow user Liam Kelly https://stackoverflow.com/u/1987437
+    # https://stackoverflow.com/a/39090882
+    def host(self):
+        fields = self.data.decode("utf-8").split("\r\n")
+        fields = fields[1:] # ignore the first line of the request
+        print(fields)
+        output = {}
+        for field in fields:
+            if not field:
+                continue
+            key, value = field.split(": ") # split each line by http field name and value
+            output[key] = value.strip()
+
+        return output["Host"]
 
     def content_type(self, req_file):
         content_type = ""
@@ -54,28 +68,39 @@ class MyWebServer(socketserver.BaseRequestHandler):
             raise FileNotFoundError("File not found.")
         return content_type
 
+    def send_bytes(self, string):
+        self.request.sendall(bytearray(string, "utf-8"))
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-
-        req_file = self.get_file()
+        print("\n\nhandle(): Got a request of: %s\n" % self.data)
 
         try:
+            req_file = self.get_file()
+
             with open("www" + req_file, "r") as index_file:
                 index = index_file.read()
+                content_type = self.content_type(req_file)
 
-                # Code from StackOverflow user falsetru https://stackoverflow.com/users/2225682/falsetru 
-                # https://stackoverflow.com/questions/21153262/sending-html-through-python-socket-server
+                # Code by StackOverflow user falsetru https://stackoverflow.com/u/2225682 
+                # https://stackoverflow.com/a/21153368
                 self.send_bytes("HTTP/1.1 200 OK\n")
-                self.send_bytes("Content-Type: " + self.content_type(req_file) + "\n")
+                self.send_bytes("Content-Type: " + content_type + "\n")
 
                 # This newline marks the end of the HTTP response headers.
+                # TODO - may have to add content-length etc. as well.
                 self.send_bytes("\n")
                 self.send_bytes(index)
-        except FileNotFoundError as e:
-            print("File not found")
+        except FileNotFoundError:
+            print("File not found! Returning 404")
             self.send_bytes("HTTP/1.1 404 Not Found\n")
-
+        except IsADirectoryError:
+            print("Is a directory! Returning 301")
+            self.send_bytes("HTTP/1.1 301 Moved Permanently\n")
+            self.send_bytes("Location: " + self.host() + req_file + "/\n")
+        except MethodNotAllowedError:
+            print("Method not allowed! Returning 405")
+            self.send_bytes("HTTP/1.1 405 Method Not Allowed\n")
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
