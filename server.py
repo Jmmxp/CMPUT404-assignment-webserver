@@ -48,7 +48,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def host(self):
         fields = self.data.decode("utf-8").split("\r\n")
         fields = fields[1:] # ignore the first line of the request
-        print(fields)
         output = {}
         for field in fields:
             if not field:
@@ -97,7 +96,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         except IsADirectoryError:
             print("Is a directory! Returning 301")
             self.send_bytes("HTTP/1.1 301 Moved Permanently\n")
-            self.send_bytes("Location: " + self.host() + req_file + "/\n")
+            self.send_bytes("Location: " + req_file + "/\n")
         except MethodNotAllowedError:
             print("Method not allowed! Returning 405")
             self.send_bytes("HTTP/1.1 405 Method Not Allowed\n")
