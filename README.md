@@ -24,6 +24,7 @@ Contributors / Licensing
 ========================
 
 Generally everything is LICENSE'D under the Apache 2 license by Abram Hindle.
+The code I added for the purpose of the assignment is licensed under the Apache 2 license by Justin Mah.
 
 server.py contains contributions from:
 
