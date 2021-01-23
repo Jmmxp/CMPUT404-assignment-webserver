@@ -38,8 +38,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         From a GET request, return the file name that is requested.
         
         Raises MethodNotAllowedError if the request was not a GET request.
+        Raises FileNotFoundError if the request cannot be parsed properly. 
         """
         data_split = self.data.decode("utf-8").split(" ")
+        if len(data_split) < 2:
+            raise FileNotFoundError("Request cannot be parsed properly - file not found.")
+
         method, req_file = data_split[0], data_split[1]
 
         if method != "GET":
