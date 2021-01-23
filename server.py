@@ -27,13 +27,21 @@ import socketserver
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 class MethodNotAllowedError(Exception):
+    """
+    Error representing that a provided HTTP method (e.g., POST) is not supported. 
+    """
     pass
 
 class MyWebServer(socketserver.BaseRequestHandler):
     def get_file(self):
+        """
+        From a GET request, return the file name that is requested.
+        
+        Raises MethodNotAllowedError if the request was not a GET request.
+        """
         data_split = self.data.decode("utf-8").split(" ")
         method, req_file = data_split[0], data_split[1]
-        
+
         if method != "GET":
             raise MethodNotAllowedError("HTTP method " + method + " is not allowed.")
 
@@ -42,9 +50,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         return req_file
 
-    # Code by StackOverflow user Liam Kelly https://stackoverflow.com/u/1987437
-    # https://stackoverflow.com/a/39090882
     def host(self):
+        """ 
+        Returns the "Host" header value from the request.
+
+        Code by StackOverflow user Liam Kelly https://stackoverflow.com/u/1987437
+        https://stackoverflow.com/a/39090882
+        """
         fields = self.data.decode("utf-8").split("\r\n")
         fields = fields[1:] # ignore the first line of the request
         output = {}
@@ -57,6 +69,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         return output["Host"]
 
     def content_type(self, req_file):
+        """
+        Get the content type of the requested file. Only supports text/html and text/css.
+        
+        Raises FileNotFoundError if the file is a mimetype other than text/html and text/css. 
+        """
         content_type = ""
         if req_file.endswith("html"):
             content_type = "text/html"
@@ -67,9 +84,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
         return content_type
 
     def send_bytes(self, string):
+        """
+        Encodes the string into a bytearray and sends it in a response back to the client. 
+        """
         self.request.sendall(bytearray(string, "utf-8"))
 
     def handle(self):
+        """
+        Handles an HTTP GET request. 
+        
+        Fetches the html/css file that is requested in the GET and returns it to the client.
+
+        If a file that does not exist on the server, or is not html/css is requested, 
+        404 Not Found is returned.
+
+        If the requested file is a directory, 301 Permanently Moved is returned, 
+        with the corrected resource in the Location response header.
+
+        IF the HTTP request contained a method other than GET, 405 Method Not Allowed 
+        is returned.
+        """
         self.data = self.request.recv(1024).strip()
 
         try:
