@@ -33,8 +33,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def get_file(self):
         data_split = self.data.decode("utf-8").split(" ")
         method, req_file = data_split[0], data_split[1]
-        print(method, req_file)
-
+        
         if method != "GET":
             raise MethodNotAllowedError("HTTP method " + method + " is not allowed.")
 
@@ -72,7 +71,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print("\n\nhandle(): Got a request of: %s\n" % self.data)
 
         try:
             req_file = self.get_file()
@@ -90,14 +88,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 self.send_bytes("\r\n")
                 self.send_bytes(index)
         except FileNotFoundError:
-            print("File not found! Returning 404")
             self.send_bytes("HTTP/1.1 404 Not Found\r\n")
         except IsADirectoryError:
-            print("Is a directory! Returning 301")
             self.send_bytes("HTTP/1.1 301 Moved Permanently\r\n")
-            self.send_bytes("Location: " + req_file + "/\r\n")
+            self.send_bytes(f"Location: http://{self.host()}{req_file}/\r\n")
         except MethodNotAllowedError:
-            print("Method not allowed! Returning 405")
             self.send_bytes("HTTP/1.1 405 Method Not Allowed\r\n")
 
 if __name__ == "__main__":
