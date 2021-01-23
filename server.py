@@ -83,23 +83,22 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
                 # Code by StackOverflow user falsetru https://stackoverflow.com/u/2225682 
                 # https://stackoverflow.com/a/21153368
-                self.send_bytes("HTTP/1.1 200 OK\n")
-                self.send_bytes("Content-Type: " + content_type + "\n")
+                self.send_bytes("HTTP/1.1 200 OK\r\n")
+                self.send_bytes("Content-Type: " + content_type + "\r\n")
 
                 # This newline marks the end of the HTTP response headers.
-                # TODO - may have to add content-length etc. as well.
-                self.send_bytes("\n")
+                self.send_bytes("\r\n")
                 self.send_bytes(index)
         except FileNotFoundError:
             print("File not found! Returning 404")
-            self.send_bytes("HTTP/1.1 404 Not Found\n")
+            self.send_bytes("HTTP/1.1 404 Not Found\r\n")
         except IsADirectoryError:
             print("Is a directory! Returning 301")
-            self.send_bytes("HTTP/1.1 301 Moved Permanently\n")
-            self.send_bytes("Location: " + req_file + "/\n")
+            self.send_bytes("HTTP/1.1 301 Moved Permanently\r\n")
+            self.send_bytes("Location: " + req_file + "/\r\n")
         except MethodNotAllowedError:
             print("Method not allowed! Returning 405")
-            self.send_bytes("HTTP/1.1 405 Method Not Allowed\n")
+            self.send_bytes("HTTP/1.1 405 Method Not Allowed\r\n")
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
