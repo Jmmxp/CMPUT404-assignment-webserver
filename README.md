@@ -10,7 +10,8 @@ Make a simple webserver.
 Collaboration
 =============================
 
-I discussed how to approach the assignment and any issues I ran into together with Vinny Luu. I helped Hongfang Xu by discussing how to pass one of the tests that was failing for him.
+I discussed how to approach the assignment and any issues I ran into together with Vinny Luu. I helped Hongfang Xu by discussing how to pass one of the tests that was failing for him, and helping him diagnose some other bugs (GitHub, VM related etc.)
+I helped Justin Tan diagnose a request header issue he was running into.
 
 Sources
 =============================
